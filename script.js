@@ -1,5 +1,11 @@
 /**
- * AQUAE Impact & AQUAE Labs — Multi-Page Institutional Controller
+ * AQUAE Impact & AQUAE Labs — 2026 Biophilic Telemetry & Multi-Page Controller
+ * Features:
+ * 1. Sticky Frosted Header & Mobile App-Like Navigation Drawer
+ * 2. Scroll-Triggered Hardware-Accelerated Reveal Animations
+ * 3. Interactive ALCI 7-Domain Heptagon & Telemetry Inspector (alci.html)
+ * 4. Interactive Pillar & Workflow Highlighters
+ * 5. Institutional Enquiry Form Validation & Topic Pre-Selection (contact.html)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. Sticky Header Scroll State
   const handleScroll = () => {
     if (!siteHeader) return;
-    if (window.scrollY > 20) {
+    if (window.scrollY > 16) {
       siteHeader.classList.add('scrolled');
     } else {
       siteHeader.classList.remove('scrolled');
@@ -19,22 +25,64 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', handleScroll, { passive: true });
   handleScroll();
 
-  // 2. Mobile Navigation Drawer
+  // 2. Mobile Navigation Drawer (Optimized for iOS & Android Touch)
   if (mobileToggle && navMenu) {
-    mobileToggle.addEventListener('click', () => {
+    mobileToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isOpen = navMenu.classList.toggle('open');
+      mobileToggle.classList.toggle('active', isOpen);
       mobileToggle.setAttribute('aria-expanded', String(isOpen));
+      document.body.style.overflow = isOpen ? 'hidden' : '';
     });
 
+    // Close menu when clicking a link
     navMenu.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
         navMenu.classList.remove('open');
+        mobileToggle.classList.remove('active');
         mobileToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
       });
+    });
+
+    // Close menu when tapping outside on mobile
+    document.addEventListener('click', (e) => {
+      if (navMenu.classList.contains('open') && !navMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
+        navMenu.classList.remove('open');
+        mobileToggle.classList.remove('active');
+        mobileToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
     });
   }
 
-  // 3. Interactive ALCI 7-Domain Heptagon & Domain Inspector (on alci.html)
+  // 3. Smooth Scroll-Triggered Reveal Animations
+  const revealTargets = document.querySelectorAll(
+    '.surface-card, .work-portal-card, .leader-card, .quote-feature-card, .glass-panel, .telemetry-stat-card, .timeline-step-card, .section-header'
+  );
+
+  if ('IntersectionObserver' in window && revealTargets.length > 0) {
+    revealTargets.forEach((el, idx) => {
+      el.classList.add('reveal-item');
+      el.style.transitionDelay = `${(idx % 4) * 55}ms`;
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -32px 0px' }
+    );
+
+    revealTargets.forEach((el) => observer.observe(el));
+  }
+
+  // 4. Interactive ALCI 7-Domain Heptagon & Domain Inspector (on alci.html)
   const domainData = {
     1: {
       code: 'DOMAIN 01 • OXYGEN',
@@ -123,10 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
   domainCards.forEach((card) => {
     card.addEventListener('click', () => {
       selectDomain(card.getAttribute('data-domain'));
+      const consoleEl = document.querySelector('.alci-interactive-console');
+      if (consoleEl && window.innerWidth < 960) {
+        consoleEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     });
   });
 
-  // 4. Contact & Enquiry Form Controller (contact.html)
+  // 5. Contact & Enquiry Form Controller (contact.html)
   const enquiryForm = document.getElementById('aquaeEnquiryForm');
   const confirmationMessage = document.getElementById('confirmationMessage');
   const resetEnquiryBtn = document.getElementById('resetEnquiryBtn');
@@ -150,6 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
   enquiryTagBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const targetVal = btn.getAttribute('data-area');
+      enquiryTagBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
       if (areaSelect && targetVal) {
         areaSelect.value = targetVal;
         areaSelect.focus();
@@ -180,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ) {
         if (formErrorMsg) {
           formErrorMsg.style.display = 'block';
+          formErrorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         return;
       }
